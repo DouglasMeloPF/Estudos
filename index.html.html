@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #6C63FF;
+    --primary-light: #8B85FF;
+    --primary-dark: #4B44CC;
+    --accent: #FF6584;
+    --accent2: #43D9AD;
+    --bg: #0F0F1A;
+    --bg2: #16162A;
+    --bg3: #1E1E38;
+    --bg4: #252545;
+    --card: #1A1A30;
+    --card2: #202040;
+    --border: rgba(108,99,255,0.18);
+    --text: #E8E8FF;
+    --text2: #9999CC;
+    --text3: #5555AA;
+    --success: #43D9AD;
+    --warning: #FFB347;
+    --danger: #FF6584;
+    --site-name: "StudyTrack";
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+  }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    width: 240px; min-width: 240px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transition: width .3s;
+  }
+  .sidebar-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .site-logo {
+    font-size: 1.4rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .site-tagline { font-size: .72rem; color: var(--text3); margin-top: 2px; letter-spacing: .5px; }
+  nav { flex: 1; padding: 16px 10px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: .88rem; font-weight: 500;
+    color: var(--text2); transition: all .2s;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(108,99,255,.18), rgba(108,99,255,.06));
+    color: var(--primary-light);
+    border-color: rgba(108,99,255,.25);
+  }
+  .nav-item .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent);
+    color: #fff; font-size: .65rem; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px;
+  }
+  .sidebar-footer { padding: 14px 10px; border-top: 1px solid var(--border); }
+  .settings-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; font-size: .85rem; color: var(--text2);
+    transition: all .2s;
+  }
+  .settings-btn:hover { background: var(--bg3); color: var(--text); }
+
+  /* ─── MAIN ─── */
+  #main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .topbar-date { font-size: .8rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+  .content { padding: 32px; flex: 1; }
+
+  /* ─── PAGES ─── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    transition: box-shadow .2s;
+  }
+  .card:hover { box-shadow: 0 4px 24px rgba(108,99,255,.08); }
+  .card-title { font-size: .78rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .card-value { font-size: 2rem; font-weight: 800; color: var(--text); }
+  .card-sub { font-size: .8rem; color: var(--text2); margin-top: 4px; }
+
+  /* ─── STATS GRID ─── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .stat-icon { font-size: 1.5rem; margin-bottom: 10px; }
+  .stat-label { font-size: .72rem; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .8px; }
+  .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text); margin: 4px 0 2px; }
+  .stat-desc { font-size: .75rem; color: var(--text2); }
+
+  /* ─── GRID LAYOUTS ─── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media(max-width:900px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    font-family: 'Sora', sans-serif; font-size: .85rem; font-weight: 600;
+    cursor: pointer; border: none; transition: all .2s; text-decoration: none;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(108,99,255,.4); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-danger { background: rgba(255,101,132,.12); color: var(--danger); border: 1px solid rgba(255,101,132,.2); }
+  .btn-danger:hover { background: rgba(255,101,132,.22); }
+  .btn-success { background: rgba(67,217,173,.12); color: var(--success); border: 1px solid rgba(67,217,173,.2); }
+  .btn-success:hover { background: rgba(67,217,173,.22); }
+  .btn-sm { padding: 6px 12px; font-size: .78rem; }
+  .btn-xs { padding: 4px 9px; font-size: .72rem; }
+
+  /* ─── FORMS ─── */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: .8rem; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Sora', sans-serif; font-size: .88rem;
+    transition: border-color .2s; outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,99,255,.12);
+  }
+  .form-select option { background: var(--bg3); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 28px; width: 90%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ─── BADGES ─── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600;
+  }
+  .badge-success { background: rgba(67,217,173,.15); color: var(--success); }
+  .badge-warning { background: rgba(255,179,71,.15); color: var(--warning); }
+  .badge-danger { background: rgba(255,101,132,.15); color: var(--danger); }
+  .badge-primary { background: rgba(108,99,255,.15); color: var(--primary-light); }
+  .badge-gray { background: rgba(153,153,204,.1); color: var(--text3); }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-bar { background: var(--bg4); border-radius: 20px; height: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--primary), var(--primary-light)); transition: width .4s; }
+  .progress-fill.success { background: linear-gradient(90deg, var(--success), #6EF0CE); }
+
+  /* ─── SUBJECT CARD ─── */
+  .subject-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+    transition: all .2s; cursor: pointer;
+  }
+  .subject-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(108,99,255,.12); }
+  .subject-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .subject-color { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .subject-name { font-weight: 700; font-size: 1rem; flex: 1; }
+  .subject-hours { font-size: .78rem; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+  .topic-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    margin-bottom: 6px; background: var(--bg3); border: 1px solid transparent;
+    transition: all .15s;
+  }
+  .topic-item:hover { border-color: var(--border); }
+  .topic-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; }
+  .topic-check.done { background: var(--success); border-color: var(--success); }
+  .topic-check.partial { background: var(--warning); border-color: var(--warning); }
+  .topic-name { flex: 1; font-size: .85rem; }
+  .topic-name.done { text-decoration: line-through; color: var(--text3); }
+
+  /* ─── QUESTOES ─── */
+  .question-row {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 8px; transition: all .15s;
+  }
+  .question-row:hover { border-color: rgba(108,99,255,.3); }
+  .q-result { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .q-result.correct { background: var(--success); }
+  .q-result.wrong { background: var(--danger); }
+  .q-text { flex: 1; font-size: .85rem; }
+  .q-meta { font-size: .75rem; color: var(--text3); white-space: nowrap; }
+
+  /* ─── REVISOES ─── */
+  .revision-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 8px;
+  }
+  .revision-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .revision-info { flex: 1; }
+  .revision-topic { font-size: .88rem; font-weight: 600; }
+  .revision-date { font-size: .75rem; color: var(--text3); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .revision-sub { font-size: .75rem; color: var(--text2); }
+
+  /* ─── CHART ─── */
+  canvas { max-width: 100%; }
+  .chart-container { position: relative; }
+
+  /* ─── COLOR PICKER ─── */
+  .color-palette { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .color-swatch {
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    border: 3px solid transparent; transition: all .15s;
+  }
+  .color-swatch:hover, .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-size: 1.05rem; font-weight: 700; }
+  .section-desc { font-size: .8rem; color: var(--text2); margin-top: 2px; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--text3); }
+  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 14px; opacity: .5; }
+  .empty-state p { font-size: .9rem; }
+
+  /* ─── TABS ─── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 22px; background: var(--bg3); padding: 4px; border-radius: var(--radius-sm); width: fit-content; }
+  .tab { padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: .85rem; font-weight: 600; color: var(--text2); transition: all .2s; }
+  .tab.active { background: var(--primary); color: #fff; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+  /* ─── TOAST ─── */
+  #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 18px;
+    font-size: .85rem; color: var(--text);
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    animation: slideIn .25s ease; min-width: 240px;
+  }
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--danger); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ─── SESSION TIMER ─── */
+  .session-bar {
+    background: linear-gradient(135deg, rgba(108,99,255,.12), rgba(108,99,255,.04));
+    border: 1px solid rgba(108,99,255,.2);
+    border-radius: var(--radius); padding: 16px 22px;
+    display: flex; align-items: center; gap: 18px;
+    margin-bottom: 24px;
+  }
+  .timer-display { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 700; color: var(--primary-light); }
+  .timer-label { font-size: .75rem; color: var(--text3); }
+
+  .day-heatmap { display: flex; flex-wrap: wrap; gap: 4px; }
+  .day-cell { width: 16px; height: 16px; border-radius: 3px; background: var(--bg4); transition: all .2s; }
+  .day-cell.studied { background: var(--primary); }
+  .day-cell.studied.high { background: var(--primary-light); }
+  .day-cell:hover { opacity: .8; }
+
+  .inline-row { display: flex; align-items: center; gap: 10px; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ─── SETTINGS ─── */
+  .settings-section { margin-bottom: 28px; }
+  .settings-title { font-size: .9rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .settings-row-label { font-size: .9rem; font-weight: 500; }
+  .settings-row-desc { font-size: .78rem; color: var(--text3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="site-logo" id="siteNameDisplay">StudyTrack</div>
+    <div class="site-tagline">Foco. Método. Resultado.</div>
+  </div>
+  <nav>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('materias')">
+      <span class="nav-icon">📚</span> Matérias
+    </div>
+    <div class="nav-item" onclick="showPage('aulas')">
+      <span class="nav-icon">▶️</span> Aulas do Dia
+    </div>
+    <div class="nav-item" onclick="showPage('questoes')">
+      <span class="nav-icon">❓</span> Questões
+    </div>
+    <div class="nav-item" onclick="showPage('revisoes')">
+      <span class="nav-icon">🔁</span> Revisões
+      <span class="nav-badge" id="revBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('desempenho')">
+      <span class="nav-icon">📊</span> Desempenho
+    </div>
+    <div class="nav-item" onclick="showPage('historico')">
+      <span class="nav-icon">📅</span> Histórico
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="settings-btn" onclick="showPage('configuracoes')">
+      <span>⚙️</span> Configurações
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-date" id="topDate"></div>
+    </div>
+    <div class="inline-row" style="gap:10px">
+      <button class="btn btn-ghost btn-sm" onclick="openSessionModal()">⏱ Registrar Sessão</button>
+      <button class="btn btn-primary btn-sm" onclick="openModalAula()">+ Registrar Aula</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">📅 Heatmap de Estudos (últimos 84 dias)</div>
+          <div style="margin-top:14px">
+            <div class="day-heatmap" id="heatmap"></div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:10px;font-size:.72rem;color:var(--text3)">
+              <div style="width:12px;height:12px;border-radius:2px;background:var(--bg4)"></div> Sem estudo
+              <div style="width:12px;height:12px;border-radius:2px;background:var(--primary)"></div> Estudou
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔁 Próximas Revisões</div>
+          <div id="dashRevisions" style="margin-top:10px"></div>
+        </div>
+      </div>
+      <div class="card" id="cicloCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="card-title" style="margin-bottom:0">🔄 Ciclo de Estudos</div>
+          <button class="btn btn-ghost btn-sm" onclick="resetCiclo()" title="Reiniciar ciclo">↺ Reiniciar</button>
+        </div>
+        <div style="font-size:.78rem;color:var(--text3);margin-bottom:14px">Marque as matérias conforme for estudando — o ciclo avança automaticamente</div>
+        <div id="subjectProgress"></div>
+      </div>
+    </div>
+
+    <!-- ── MATÉRIAS ── -->
+    <div class="page" id="page-materias">
+      <div class="section-header">
+        <div>
+          <div class="section-title">📚 Matérias & Tópicos</div>
+          <div class="section-desc">Gerencie suas matérias e adicione tópicos de estudo</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewMateria()">+ Nova Matéria</button>
+      </div>
+      <div id="materiasList"></div>
+    </div>
+
+    <!-- ── AULAS DO DIA ── -->
+    <div class="page" id="page-aulas">
+      <div class="section-header">
+        <div>
+          <div class="section-title">▶️ Aulas do Dia</div>
+          <div class="section-desc">Registre o que estudou hoje</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModalAula()">+ Registrar Aula</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="filterAulas('today',this)">Hoje</div>
+        <div class="tab" onclick="filterAulas('all',this)">Todas</div>
+        <div class="tab" onclick="filterAulas('incomplete',this)">Incompletas</div>
+      </div>
+      <div id="aulasList"></div>
+    </div>
+
+    <!-- ── QUESTÕES ── -->
+    <div class="page" id="page-questoes">
+      <div class="section-header">
+        <div>
+          <div class="section-title">❓ Questões</div>
+          <div class="section-desc">Registre suas questões e acompanhe seu desempenho</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModalQuestao()">+ Registrar Questão</button>
+      </div>
+      <div class="stats-grid" id="questaoStats" style="margin-bottom:20px"></div>
+      <div id="questoesList"></div>
+    </div>
+
+    <!-- ── REVISÕES ── -->
+    <div class="page" id="page-revisoes">
+      <div class="section-header">
+        <div>
+          <div class="section-title">🔁 Revisões Programadas</div>
+          <div class="section-desc">Método espaçado: 7d • 15d • 15d • 30d • 30d • 30d • 60d</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="filterRevisoes('pending',this)">Pendentes</div>
+        <div class="tab" onclick="filterRevisoes('today',this)">Hoje</div>
+        <div class="tab" onclick="filterRevisoes('all',this)">Todas</div>
+        <div class="tab" onclick="filterRevisoes('done',this)">Concluídas</div>
+      </div>
+      <div id="revisoesList"></div>
+    </div>
+
+    <!-- ── DESEMPENHO ── -->
+    <div class="page" id="page-desempenho">
+      <div class="section-title" style="margin-bottom:22px">📊 Desempenho</div>
+      <div class="tabs">
+        <div class="tab active" onclick="filterDesempenho('geral',this)">Geral</div>
+        <div class="tab" onclick="filterDesempenho('materia',this)">Por Matéria</div>
+        <div class="tab" onclick="filterDesempenho('topico',this)">Por Tópico</div>
+      </div>
+      <div id="desempenhoContent"></div>
+    </div>
+
+    <!-- ── HISTÓRICO ── -->
+    <div class="page" id="page-historico">
+      <div class="section-title" style="margin-bottom:22px">📅 Histórico de Sessões</div>
+      <div id="historicoList"></div>
+    </div>
+
+    <!-- ── CONFIGURAÇÕES ── -->
+    <div class="page" id="page-configuracoes">
+      <div class="section-title" style="margin-bottom:22px">⚙️ Configurações</div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section">
+          <div class="settings-title">🎨 Aparência</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Nome do Site</div>
+              <div class="settings-row-desc">Personalize o nome exibido no menu</div>
+            </div>
+            <div class="inline-row">
+              <input class="form-input" id="siteNameInput" style="width:180px" placeholder="StudyTrack">
+              <button class="btn btn-primary btn-sm" onclick="saveSiteName()">Salvar</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Cor Principal</div>
+              <div class="settings-row-desc">Escolha a paleta de cores do sistema</div>
+            </div>
+            <div>
+              <div class="color-palette" id="colorPalette"></div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Cor Personalizada</div>
+              <div class="settings-row-desc">Digite um hex ou use o color picker</div>
+            </div>
+            <div class="inline-row">
+              <input type="color" id="customColorPicker" style="width:40px;height:34px;border:none;border-radius:6px;cursor:pointer;background:none" onchange="applyCustomColor(this.value)">
+              <input class="form-input" id="customColorHex" style="width:110px" placeholder="#6C63FF" onchange="applyCustomColor(this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section">
+          <div class="settings-title">🔁 Intervalo de Revisões</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Sequência (dias)</div>
+              <div class="settings-row-desc">Separe os intervalos por vírgula</div>
+            </div>
+            <div class="inline-row">
+              <input class="form-input" id="revisionIntervals" style="width:240px" placeholder="7,15,15,30,30,30,60">
+              <button class="btn btn-primary btn-sm" onclick="saveRevisionIntervals()">Salvar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="settings-section">
+          <div class="settings-title">🗑️ Dados</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Exportar Dados</div>
+              <div class="settings-row-desc">Baixe um JSON com todos os seus dados</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Exportar</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Importar Dados</div>
+              <div class="settings-row-desc">Restaure dados de um backup</div>
+            </div>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+              ⬆ Importar <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+            </label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Limpar Todos os Dados</div>
+              <div class="settings-row-desc">Ação irreversível</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑 Limpar Tudo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- MATÉRIA -->
+<div class="modal-overlay" id="modalMateria">
+  <div class="modal">
+    <div class="modal-title" id="modalMateriaTitle">➕ Nova Matéria</div>
+    <div class="form-group">
+      <label class="form-label">Nome da Matéria</label>
+      <input class="form-input" id="mNome" placeholder="Ex: Matemática, Português...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cor</label>
+      <div class="color-palette" id="mColorPalette"></div>
+      <input type="color" id="mColor" value="#6C63FF" style="margin-top:10px;width:40px;height:30px;border:none;border-radius:4px;cursor:pointer" onchange="selectMateriaColor(this.value)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalMateria')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMateria()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TÓPICO -->
+<div class="modal-overlay" id="modalTopico">
+  <div class="modal">
+    <div class="modal-title">➕ Novo Tópico</div>
+    <input type="hidden" id="tMateriaId">
+    <div class="form-group">
+      <label class="form-label">Nome do Tópico</label>
+      <input class="form-input" id="tNome" placeholder="Ex: Equações do 2º grau">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalTopico')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTopico()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- AULA -->
+<div class="modal-overlay" id="modalAula">
+  <div class="modal">
+    <div class="modal-title" id="modalAulaTitle">▶️ Registrar Aula</div>
+    <input type="hidden" id="aId">
+    <div class="form-group">
+      <label class="form-label">Matéria</label>
+      <select class="form-select" id="aMateria" onchange="populateTopicosAula()">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tópico</label>
+      <select class="form-select" id="aTopico">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Data</label>
+      <input type="date" class="form-input" id="aData">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="aStatus" onchange="toggleAulaFields()">
+        <option value="done">✅ Finalizado</option>
+        <option value="partial">⏸ Não finalizado (onde parei)</option>
+      </select>
+    </div>
+    <div class="form-group" id="aOndePareiGroup" style="display:none">
+      <label class="form-label">Onde Parei</label>
+      <input class="form-input" id="aOndePare" placeholder="Ex: Aula 3 - min 24:30 / página 45">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Horas Estudadas</label>
+      <input type="number" class="form-input" id="aHoras" placeholder="Ex: 1.5" step="0.25" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea class="form-textarea" id="aNotas" placeholder="Observações sobre a aula..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalAula')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAula()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTÃO -->
+<div class="modal-overlay" id="modalQuestao">
+  <div class="modal">
+    <div class="modal-title" id="modalQuestaoTitle">📝 Registrar Questões</div>
+    <input type="hidden" id="qId">
+    <div class="form-group">
+      <label class="form-label">Matéria</label>
+      <select class="form-select" id="qMateria" onchange="populateTopicosQ()">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tópico (opcional)</label>
+      <select class="form-select" id="qTopico">
+        <option value="">Todos os tópicos</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Data</label>
+      <input type="date" class="form-input" id="qData">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Total de Questões</label>
+      <input type="number" class="form-input" id="qTotal" placeholder="Ex: 30" min="1" oninput="calcQuestoes()">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">✅ Acertos</label>
+        <input type="number" class="form-input" id="qAcertos" placeholder="Ex: 22" min="0" oninput="calcQuestoes()">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">❌ Erros</label>
+        <input type="number" class="form-input" id="qErros" placeholder="" min="0" readonly style="background:var(--bg3);cursor:not-allowed">
+      </div>
+    </div>
+    <div id="qResumo" style="display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--bg3);font-size:.85rem"></div>
+    <div class="form-group">
+      <label class="form-label">Observações (opcional)</label>
+      <textarea class="form-textarea" id="qDesc" placeholder="Ex: Simulado ENADE, lista do professor..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalQuestao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveQuestao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSÃO -->
+<div class="modal-overlay" id="modalSessao">
+  <div class="modal">
+    <div class="modal-title">⏱ Registrar Sessão de Estudo</div>
+    <div class="form-group">
+      <label class="form-label">Data</label>
+      <input type="date" class="form-input" id="sData">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Horas Estudadas</label>
+      <input type="number" class="form-input" id="sHoras" placeholder="Ex: 2.5" step="0.25" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observações</label>
+      <textarea class="form-textarea" id="sNotes" placeholder="Como foi a sessão?"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalSessao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSessao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVISÃO MANUAL -->
+<div class="modal-overlay" id="modalRevisao">
+  <div class="modal">
+    <div class="modal-title" id="modalRevisaoTitle">🔁 Revisão</div>
+    <input type="hidden" id="rId">
+    <div class="form-group">
+      <label class="form-label">Tópico</label>
+      <select class="form-select" id="rTopico">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Data da Revisão</label>
+      <input type="date" class="form-input" id="rData">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="rStatus">
+        <option value="pending">⏳ Pendente</option>
+        <option value="done">✅ Concluída</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalRevisao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRevisao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   DATA LAYER
+══════════════════════════════════════ */
+const DB_KEY = 'studytrack_data';
+let data = JSON.parse(localStorage.getItem(DB_KEY) || 'null') || {
+  materias: [],
+  topicos: [],
+  aulas: [],
+  questoes: [],
+  revisoes: [],
+  sessoes: [],
+  ciclo: { estudadas: {} },
+  settings: { siteName: 'StudyTrack', color: '#6C63FF', revisionIntervals: [7,15,15,30,30,30,60] }
+};
+
+function save() { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(str) {
+  if(!str) return '-';
+  const d = new Date(str+'T12:00:00');
+  return d.toLocaleDateString('pt-BR');
+}
+function addDays(str, n) {
+  const d = new Date(str+'T12:00:00');
+  d.setDate(d.getDate()+n);
+  return d.toISOString().split('T')[0];
+}
+function diffDays(a, b) {
+  const da = new Date(a+'T12:00:00'), db = new Date(b+'T12:00:00');
+  return Math.round((db-da)/(1000*60*60*24));
+}
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+const pageTitles = {
+  dashboard:'Dashboard', materias:'Matérias & Tópicos', aulas:'Aulas do Dia',
+  questoes:'Questões', revisoes:'Revisões', desempenho:'Desempenho',
+  historico:'Histórico', configuracoes:'Configurações'
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if(n.textContent.trim().toLowerCase().includes(pageTitles[id]?.split(' ')[0]?.toLowerCase())) n.classList.add('active');
+  });
+  document.getElementById('pageTitle').textContent = pageTitles[id] || id;
+  // Re-render on show
+  if(id==='dashboard') renderDashboard();
+  if(id==='materias') renderMaterias();
+  if(id==='aulas') renderAulas();
+  if(id==='questoes') renderQuestoes();
+  if(id==='revisoes') renderRevisoes();
+  if(id==='desempenho') renderDesempenho('geral');
+  if(id==='historico') renderHistorico();
+  if(id==='configuracoes') renderConfiguracoes();
+}
+
+/* ══════════════════════════════════════
+   MODAL HELPERS
+══════════════════════════════════════ */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) closeModal(m.id); });
+});
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+/* ══════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════ */
+const PALETTE = ['#6C63FF','#FF6584','#43D9AD','#FFB347','#00B4D8','#E040FB','#FF5252','#CDDC39','#FF7043','#26C6DA','#7C4DFF','#F06292'];
+
+function applyColor(hex) {
+  data.settings.color = hex;
+  const r = hexToRgb(hex);
+  document.documentElement.style.setProperty('--primary', hex);
+  document.documentElement.style.setProperty('--primary-light', lightenHex(hex, 20));
+  document.documentElement.style.setProperty('--primary-dark', darkenHex(hex, 20));
+  document.documentElement.style.setProperty('--border', `rgba(${r.r},${r.g},${r.b},0.18)`);
+  save();
+  renderPalette();
+}
+function hexToRgb(hex) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? {r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)} : {r:108,g:99,b:255};
+}
+function lightenHex(hex, pct) {
+  const {r,g,b} = hexToRgb(hex);
+  const f = pct/100;
+  return '#'+[r,g,b].map(v=>Math.min(255,Math.round(v+(255-v)*f)).toString(16).padStart(2,'0')).join('');
+}
+function darkenHex(hex, pct) {
+  const {r,g,b} = hexToRgb(hex);
+  const f = 1-pct/100;
+  return '#'+[r,g,b].map(v=>Math.min(255,Math.round(v*f)).toString(16).padStart(2,'0')).join('');
+}
+function applyCustomColor(v) {
+  if(/^#[0-9A-Fa-f]{6}$/.test(v)) {
+    applyColor(v);
+    document.getElementById('customColorHex').value = v;
+    document.getElementById('customColorPicker').value = v;
+  }
+}
+let selectedMateriaColor = '#6C63FF';
+function renderPalette() {
+  // Theme color palette (configurações)
+  const themeEl = document.getElementById('colorPalette');
+  if(themeEl) {
+    themeEl.innerHTML = PALETTE.map(c => `
+      <div class="color-swatch ${c===data.settings.color?'selected':''}" style="background:${c}" onclick="applyColor('${c}')"></div>
+    `).join('');
+  }
+  // Materia color palette (modal matéria)
+  const materiaEl = document.getElementById('mColorPalette');
+  if(materiaEl) {
+    materiaEl.innerHTML = PALETTE.map(c => `
+      <div class="color-swatch ${c===selectedMateriaColor?'selected':''}" style="background:${c}" onclick="selectMateriaColor('${c}')"></div>
+    `).join('');
+  }
+}
+function selectMateriaColor(hex) {
+  selectedMateriaColor = hex;
+  document.getElementById('mColor').value = hex;
+  renderPalette();
+}
+function saveSiteName() {
+  const v = document.getElementById('siteNameInput').value.trim();
+  if(!v) return;
+  data.settings.siteName = v;
+  document.getElementById('siteNameDisplay').textContent = v;
+  document.title = v;
+  save();
+  toast('Nome do site atualizado!');
+}
+function saveRevisionIntervals() {
+  const raw = document.getElementById('revisionIntervals').value;
+  const intervals = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);
+  if(!intervals.length) return toast('Intervalos inválidos','error');
+  data.settings.revisionIntervals = intervals;
+  save();
+  toast('Intervalos salvos!');
+}
+function renderConfiguracoes() {
+  document.getElementById('siteNameInput').value = data.settings.siteName;
+  document.getElementById('revisionIntervals').value = data.settings.revisionIntervals.join(',');
+  document.getElementById('customColorHex').value = data.settings.color;
+  document.getElementById('customColorPicker').value = data.settings.color;
+  renderPalette();
+}
+
+/* Helper: keep materia selects in sync across all modals */
+function populateMateriaSelects() {
+  ['aMateria','qMateria'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if(!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Selecione...</option>';
+    data.materias.forEach(m => sel.innerHTML += `<option value="${m.id}">${m.nome}</option>`);
+    if(prev && data.materias.find(x=>x.id===prev)) sel.value = prev;
+  });
+}
+
+/* ══════════════════════════════════════
+   MATÉRIAS
+══════════════════════════════════════ */
+let editingMateriaId = null;
+function openNewMateria() {
+  editingMateriaId = null;
+  document.getElementById('modalMateriaTitle').textContent = '➕ Nova Matéria';
+  document.getElementById('mNome').value = '';
+  selectedMateriaColor = '#6C63FF';
+  document.getElementById('mColor').value = '#6C63FF';
+  renderPalette();
+  openModal('modalMateria');
+}
+function openModal_editMateria(id) {
+  const m = data.materias.find(x=>x.id===id);
+  if(!m) return;
+  editingMateriaId = id;
+  document.getElementById('modalMateriaTitle').textContent = '✏️ Editar Matéria';
+  document.getElementById('mNome').value = m.nome;
+  document.getElementById('mColor').value = m.cor;
+  selectedMateriaColor = m.cor;
+  renderPalette();
+  openModal('modalMateria');
+}
+function saveMateria() {
+  const nome = document.getElementById('mNome').value.trim();
+  const cor = document.getElementById('mColor').value || selectedMateriaColor;
+  if(!nome) return toast('Informe o nome da matéria','error');
+  if(editingMateriaId) {
+    const m = data.materias.find(x=>x.id===editingMateriaId);
+    if(m) { m.nome=nome; m.cor=cor; }
+    editingMateriaId=null;
+  } else {
+    data.materias.push({id:uid(), nome, cor, criadaEm:todayStr()});
+  }
+  save(); closeModal('modalMateria'); renderMaterias();
+  // Re-populate materia selects in other modals
+  populateMateriaSelects();
+  document.getElementById('mNome').value='';
+  selectedMateriaColor = '#6C63FF';
+  document.getElementById('mColor').value = '#6C63FF';
+  document.getElementById('modalMateriaTitle').textContent='➕ Nova Matéria';
+  toast('Matéria salva!');
+}
+function deleteMateria(id) {
+  if(!confirm('Excluir matéria e todos os seus tópicos?')) return;
+  data.materias = data.materias.filter(x=>x.id!==id);
+  data.topicos = data.topicos.filter(x=>x.materiaId!==id);
+  save(); renderMaterias(); populateMateriaSelects(); toast('Matéria excluída');
+}
+function renderMaterias() {
+  const el = document.getElementById('materiasList');
+  if(!data.materias.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📚</div><p>Nenhuma matéria cadastrada ainda.</p></div>`;
+    return;
+  }
+  el.innerHTML = data.materias.map(m => {
+    const tops = data.topicos.filter(t=>t.materiaId===m.id);
+    const done = tops.filter(t=>t.status==='done').length;
+    const horas = data.aulas.filter(a=>a.materiaId===m.id).reduce((s,a)=>s+(parseFloat(a.horas)||0),0);
+    const topPct = tops.length ? Math.round(done/tops.length*100) : null;
+    const pct = topPct !== null ? topPct : Math.min(100, Math.round(horas/10*100));
+    const barWidth = Math.max(pct, horas>0&&pct===0?4:0);
+    const progressLabel = topPct !== null ? `${done}/${tops.length} tópicos` : `${horas.toFixed(1)}h estudadas`;
+    return `
+    <div class="subject-card" style="margin-bottom:16px">
+      <div class="subject-header">
+        <div class="subject-color" style="background:${m.cor}"></div>
+        <div class="subject-name">${m.nome}</div>
+        <div class="subject-hours">⏱ ${horas.toFixed(1)}h</div>
+        <button class="btn btn-ghost btn-xs" onclick="openModal_editMateria('${m.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteMateria('${m.id}')">🗑</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div class="progress-bar" style="flex:1"><div class="progress-fill ${pct>=70?'success':''}" style="width:${barWidth}%"></div></div>
+        <span style="font-size:.75rem;color:var(--text3);white-space:nowrap">${progressLabel}</span>
+      </div>
+      ${tops.map(t => `
+        <div class="topic-item">
+          <div class="topic-check ${t.status||''}" onclick="cycleTopicStatus('${t.id}')">
+            ${t.status==='done'?'✓':t.status==='partial'?'⏸':''}
+          </div>
+          <div class="topic-name ${t.status==='done'?'done':''}" style="flex:1">${t.nome}</div>
+          ${t.status==='partial'&&t.ondePare?`<span style="font-size:.72rem;color:var(--warning);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.ondePare}">📍 ${t.ondePare}</span>`:''}
+          <button class="btn btn-danger btn-xs" onclick="deleteTopico('${t.id}')">✕</button>
+        </div>
+      `).join('')}
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%" onclick="openAddTopico('${m.id}')">+ Adicionar Tópico</button>
+    </div>`;
+  }).join('');
+}
+function openAddTopico(materiaId) {
+  document.getElementById('tMateriaId').value = materiaId;
+  document.getElementById('tNome').value = '';
+  openModal('modalTopico');
+}
+function saveTopico() {
+  const nome = document.getElementById('tNome').value.trim();
+  const materiaId = document.getElementById('tMateriaId').value;
+  if(!nome) return toast('Informe o nome do tópico','error');
+  data.topicos.push({id:uid(), materiaId, nome, status:'', ondePare:'', criadoEm:todayStr()});
+  save(); closeModal('modalTopico'); renderMaterias(); toast('Tópico adicionado!');
+}
+function deleteTopico(id) {
+  if(!confirm('Excluir este tópico?')) return;
+  data.topicos = data.topicos.filter(x=>x.id!==id);
+  save(); renderMaterias(); toast('Tópico excluído');
+}
+function cycleTopicStatus(id) {
+  const t = data.topicos.find(x=>x.id===id);
+  if(!t) return;
+  const states = ['','partial','done'];
+  const idx = states.indexOf(t.status||'');
+  t.status = states[(idx+1)%states.length];
+  if(t.status==='done') scheduleRevisions(t);
+  save(); renderMaterias();
+}
+
+/* ══════════════════════════════════════
+   AULAS
+══════════════════════════════════════ */
+let aulaFilter = 'today';
+function populateTopicosAula() {
+  const materiaId = document.getElementById('aMateria').value;
+  const sel = document.getElementById('aTopico');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  data.topicos.filter(t=>t.materiaId===materiaId).forEach(t => {
+    sel.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+  });
+}
+function populateTopicosQ() {
+  const materiaId = document.getElementById('qMateria').value;
+  const sel = document.getElementById('qTopico');
+  sel.innerHTML = '<option value="">Todos os tópicos</option>';
+  data.topicos.filter(t=>t.materiaId===materiaId).forEach(t => {
+    sel.innerHTML += `<option value="${t.id}">${t.nome}</option>`;
+  });
+}
+function toggleAulaFields() {
+  const s = document.getElementById('aStatus').value;
+  document.getElementById('aOndePareiGroup').style.display = s==='partial'?'block':'none';
+}
+function openModalAula(id=null) {
+  editingAulaId=id;
+  const mSel = document.getElementById('aMateria');
+  mSel.innerHTML = '<option value="">Selecione...</option>';
+  data.materias.forEach(m => mSel.innerHTML += `<option value="${m.id}">${m.nome}</option>`);
+  document.getElementById('aData').value = todayStr();
+  document.getElementById('aHoras').value = '';
+  document.getElementById('aNotas').value = '';
+  document.getElementById('aOndePare').value = '';
+  document.getElementById('aStatus').value = 'done';
+  document.getElementById('aTopico').innerHTML = '<option value="">Selecione...</option>';
+  document.getElementById('aOndePareiGroup').style.display='none';
+  if(id) {
+    const a = data.aulas.find(x=>x.id===id);
+    if(a) {
+      document.getElementById('modalAulaTitle').textContent='✏️ Editar Aula';
+      mSel.value = a.materiaId;
+      populateTopicosAula();
+      document.getElementById('aTopico').value = a.topicoId||'';
+      document.getElementById('aData').value = a.data;
+      document.getElementById('aStatus').value = a.status;
+      document.getElementById('aHoras').value = a.horas||'';
+      document.getElementById('aNotas').value = a.notas||'';
+      document.getElementById('aOndePare').value = a.ondePare||'';
+      toggleAulaFields();
+    }
+  } else {
+    document.getElementById('modalAulaTitle').textContent='▶️ Registrar Aula';
+  }
+  openModal('modalAula');
+}
+let editingAulaId = null;
+function saveAula() {
+  const materiaId = document.getElementById('aMateria').value;
+  const topicoId = document.getElementById('aTopico').value;
+  const data2 = document.getElementById('aData').value;
+  const status = document.getElementById('aStatus').value;
+  const horas = parseFloat(document.getElementById('aHoras').value)||0;
+  const notas = document.getElementById('aNotas').value.trim();
+  const ondePare = document.getElementById('aOndePare').value.trim();
+  if(!materiaId||!data2) return toast('Preencha matéria e data','error');
+  if(editingAulaId) {
+    const a = data.aulas.find(x=>x.id===editingAulaId);
+    if(a) Object.assign(a,{materiaId,topicoId,data:data2,status,horas,notas,ondePare});
+    editingAulaId=null;
+  } else {
+    const newAula = {id:uid(),materiaId,topicoId,data:data2,status,horas,notas,ondePare,criadaEm:todayStr()};
+    data.aulas.push(newAula);
+    // auto-update topico status
+    if(topicoId) {
+      const t = data.topicos.find(x=>x.id===topicoId);
+      if(t) {
+        t.status = status;
+        t.ondePare = ondePare;
+        if(status==='done') scheduleRevisions(t);
+      }
+    }
+    // auto add study day session
+    let sess = data.sessoes.find(s=>s.data===data2&&!s.manual);
+    if(!sess) { data.sessoes.push({id:uid(),data:data2,horas,notas:'',manual:false}); }
+    else { sess.horas=(parseFloat(sess.horas)||0)+horas; }
+  }
+  save(); closeModal('modalAula'); renderAulas(); toast('Aula registrada!');
+}
+function deleteAula(id) {
+  if(!confirm('Excluir este registro?')) return;
+  data.aulas = data.aulas.filter(x=>x.id!==id);
+  save(); renderAulas(); toast('Registro excluído');
+}
+function filterAulas(f, el) {
+  aulaFilter = f;
+  document.querySelectorAll('#page-aulas .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderAulas();
+}
+function renderAulas() {
+  const el = document.getElementById('aulasList');
+  let list = [...data.aulas].sort((a,b)=>b.data.localeCompare(a.data));
+  if(aulaFilter==='today') list = list.filter(a=>a.data===todayStr());
+  if(aulaFilter==='incomplete') list = list.filter(a=>a.status==='partial');
+  if(!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">▶️</div><p>Nenhuma aula registrada ${aulaFilter==='today'?'hoje':''}</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(a => {
+    const m = data.materias.find(x=>x.id===a.materiaId);
+    const t = data.topicos.find(x=>x.id===a.topicoId);
+    return `
+    <div class="question-row">
+      <div class="q-result" style="background:${a.status==='done'?'var(--success)':'var(--warning)'}"></div>
+      <div style="width:12px;height:12px;border-radius:50%;background:${m?.cor||'var(--primary)'}"></div>
+      <div class="q-text">
+        <div style="font-weight:600">${m?.nome||'—'} ${t?`<span style="color:var(--text2)">· ${t.nome}</span>`:''}  </div>
+        ${a.status==='partial'&&a.ondePare?`<div style="font-size:.75rem;color:var(--warning);margin-top:2px">📍 Parou em: ${a.ondePare}</div>`:''}
+        ${a.notas?`<div style="font-size:.75rem;color:var(--text3);margin-top:2px">${a.notas}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        <div class="q-meta">${fmtDate(a.data)}</div>
+        <div style="font-size:.75rem;color:var(--text2);margin-top:2px">⏱ ${a.horas||0}h</div>
+        <span class="badge ${a.status==='done'?'badge-success':'badge-warning'}" style="margin-top:4px">${a.status==='done'?'Finalizado':'Incompleto'}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-ghost btn-xs" onclick="openModalAula('${a.id}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteAula('${a.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   QUESTÕES (registro em lote)
+══════════════════════════════════════ */
+let editingQId = null;
+
+function calcQuestoes() {
+  const total = parseInt(document.getElementById('qTotal').value) || 0;
+  const acertos = parseInt(document.getElementById('qAcertos').value) || 0;
+  const erros = Math.max(0, total - acertos);
+  document.getElementById('qErros').value = total > 0 ? erros : '';
+  const resumo = document.getElementById('qResumo');
+  if(total > 0) {
+    const pct = Math.round(acertos/total*100);
+    const cor = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+    resumo.style.display = 'block';
+    resumo.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span>Aproveitamento:</span>
+        <strong style="font-size:1.1rem;color:${cor}">${pct}% (${acertos} de ${total})</strong>
+      </div>
+      <div class="progress-bar" style="margin-top:8px;height:8px">
+        <div class="progress-fill ${pct>=70?'success':''}" style="width:${pct}%;background:${cor}"></div>
+      </div>`;
+  } else {
+    resumo.style.display = 'none';
+  }
+}
+
+function openModalQuestao(id=null) {
+  editingQId = id;
+  const mSel = document.getElementById('qMateria');
+  mSel.innerHTML = '<option value="">Selecione...</option>';
+  data.materias.forEach(m => mSel.innerHTML += `<option value="${m.id}">${m.nome}</option>`);
+  document.getElementById('qData').value = todayStr();
+  document.getElementById('qTotal').value = '';
+  document.getElementById('qAcertos').value = '';
+  document.getElementById('qErros').value = '';
+  document.getElementById('qDesc').value = '';
+  document.getElementById('qResumo').style.display = 'none';
+  document.getElementById('qTopico').innerHTML = '<option value="">Todos os tópicos</option>';
+  if(id) {
+    const q = data.questoes.find(x=>x.id===id);
+    if(q) {
+      document.getElementById('modalQuestaoTitle').textContent = '✏️ Editar Registro';
+      mSel.value = q.materiaId; populateTopicosQ();
+      document.getElementById('qTopico').value = q.topicoId||'';
+      document.getElementById('qData').value = q.data;
+      document.getElementById('qTotal').value = q.total||'';
+      document.getElementById('qAcertos').value = q.acertos||'';
+      document.getElementById('qDesc').value = q.desc||'';
+      calcQuestoes();
+    }
+  } else {
+    document.getElementById('modalQuestaoTitle').textContent = '📝 Registrar Questões';
+  }
+  openModal('modalQuestao');
+}
+
+function saveQuestao() {
+  const materiaId = document.getElementById('qMateria').value;
+  const topicoId  = document.getElementById('qTopico').value;
+  const date      = document.getElementById('qData').value;
+  const total     = parseInt(document.getElementById('qTotal').value)||0;
+  const acertos   = parseInt(document.getElementById('qAcertos').value)||0;
+  const erros     = Math.max(0, total - acertos);
+  const desc      = document.getElementById('qDesc').value.trim();
+  if(!materiaId || !date)   return toast('Preencha matéria e data','error');
+  if(total <= 0)             return toast('Informe o total de questões','error');
+  if(acertos > total)        return toast('Acertos não pode ser maior que o total','error');
+  if(editingQId) {
+    const q = data.questoes.find(x=>x.id===editingQId);
+    if(q) Object.assign(q, {materiaId, topicoId, data:date, total, acertos, erros, desc});
+    editingQId = null;
+  } else {
+    data.questoes.push({id:uid(), materiaId, topicoId, data:date, total, acertos, erros, desc, criadaEm:todayStr()});
+  }
+  save(); closeModal('modalQuestao'); renderQuestoes(); toast('Questões registradas!');
+}
+
+function deleteQuestao(id) {
+  if(!confirm('Excluir este registro?')) return;
+  data.questoes = data.questoes.filter(x=>x.id!==id);
+  save(); renderQuestoes(); toast('Registro excluído');
+}
+
+function renderQuestoes() {
+  const totalQ   = data.questoes.reduce((s,q)=>s+(q.total||0),0);
+  const totalAc  = data.questoes.reduce((s,q)=>s+(q.acertos||0),0);
+  const totalEr  = data.questoes.reduce((s,q)=>s+(q.erros||0),0);
+  const pct      = totalQ ? Math.round(totalAc/totalQ*100) : 0;
+  document.getElementById('questaoStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-label">Total</div><div class="stat-value">${totalQ}</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Acertos</div><div class="stat-value" style="color:var(--success)">${totalAc}</div></div>
+    <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-label">Erros</div><div class="stat-value" style="color:var(--danger)">${totalEr}</div></div>
+    <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-label">Aproveitamento</div><div class="stat-value" style="color:var(--primary)">${pct}%</div></div>
+  `;
+  const el = document.getElementById('questoesList');
+  if(!data.questoes.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">❓</div><p>Nenhuma questão registrada ainda.</p></div>`; return; }
+  el.innerHTML = [...data.questoes].sort((a,b)=>b.data.localeCompare(a.data)).map(q=>{
+    const m   = data.materias.find(x=>x.id===q.materiaId);
+    const t   = data.topicos.find(x=>x.id===q.topicoId);
+    const tot = q.total || 0;
+    const ac  = q.acertos || 0;
+    const er  = q.erros   || 0;
+    const p   = tot ? Math.round(ac/tot*100) : 0;
+    const cor = p>=70?'var(--success)':p>=50?'var(--warning)':'var(--danger)';
+    return `
+    <div class="question-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:10px;height:10px;border-radius:50%;background:${m?.cor||'#999'};flex-shrink:0"></div>
+        <div style="flex:1">
+          <div style="font-weight:700">${m?.nome||'—'}${t?` · <span style="font-weight:400">${t.nome}</span>`:''}</div>
+          ${q.desc?`<div style="font-size:.78rem;color:var(--text2);margin-top:2px">${q.desc}</div>`:''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:.75rem;color:var(--text3)">${fmtDate(q.data)}</div>
+          <div style="font-size:1rem;font-weight:800;color:${cor};margin-top:2px">${p}%</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button class="btn btn-ghost btn-xs" onclick="openModalQuestao('${q.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteQuestao('${q.id}')">🗑</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="progress-bar" style="flex:1;height:7px">
+          <div class="progress-fill ${p>=70?'success':''}" style="width:${p}%;background:${cor}"></div>
+        </div>
+        <span style="font-size:.78rem;white-space:nowrap;color:var(--text2)">✅ ${ac} &nbsp;❌ ${er} &nbsp;/ ${tot}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   REVISÕES
+══════════════════════════════════════ */
+function scheduleRevisions(topico) {
+  const intervals = data.settings.revisionIntervals || [7,15,15,30,30,30,60];
+  // Remove pending revisions for this topic
+  data.revisoes = data.revisoes.filter(r=>r.topicoId!==topico.id||r.status==='done');
+  // Schedule new ones
+  let base = todayStr();
+  intervals.forEach((d,i) => {
+    const date = addDays(base, d);
+    base = date;
+    data.revisoes.push({id:uid(), topicoId:topico.id, data:date, status:'pending', ordem:i+1, criadaEm:todayStr()});
+  });
+  save();
+}
+let revisaoFilter = 'pending';
+function filterRevisoes(f, el) {
+  revisaoFilter=f;
+  document.querySelectorAll('#page-revisoes .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderRevisoes();
+}
+function markRevisaoDone(id) {
+  const r=data.revisoes.find(x=>x.id===id);
+  if(r) { r.status='done'; r.feitaEm=todayStr(); }
+  save(); renderRevisoes(); updateRevBadge(); toast('Revisão concluída! ✅');
+}
+function deleteRevisao(id) {
+  if(!confirm('Excluir esta revisão?')) return;
+  data.revisoes=data.revisoes.filter(x=>x.id!==id);
+  save(); renderRevisoes(); updateRevBadge();
+}
+function openModalRevisao(id=null) {
+  const sel=document.getElementById('rTopico');
+  sel.innerHTML='<option value="">Selecione...</option>';
+  data.topicos.forEach(t=>{
+    const m=data.materias.find(x=>x.id===t.materiaId);
+    sel.innerHTML+=`<option value="${t.id}">${m?.nome||''} — ${t.nome}</option>`;
+  });
+  document.getElementById('rData').value=todayStr();
+  document.getElementById('rStatus').value='pending';
+  document.getElementById('rId').value=id||'';
+  if(id) {
+    const r=data.revisoes.find(x=>x.id===id);
+    if(r){
+      document.getElementById('modalRevisaoTitle').textContent='✏️ Editar Revisão';
+      sel.value=r.topicoId;
+      document.getElementById('rData').value=r.data;
+      document.getElementById('rStatus').value=r.status;
+    }
+  } else { document.getElementById('modalRevisaoTitle').textContent='🔁 Nova Revisão'; }
+  openModal('modalRevisao');
+}
+function saveRevisao() {
+  const id=document.getElementById('rId').value;
+  const topicoId=document.getElementById('rTopico').value;
+  const date=document.getElementById('rData').value;
+  const status=document.getElementById('rStatus').value;
+  if(!topicoId||!date) return toast('Preencha todos os campos','error');
+  if(id) {
+    const r=data.revisoes.find(x=>x.id===id);
+    if(r) Object.assign(r,{topicoId,data:date,status});
+  } else {
+    data.revisoes.push({id:uid(),topicoId,data:date,status,criadaEm:todayStr()});
+  }
+  save(); closeModal('modalRevisao'); renderRevisoes(); updateRevBadge(); toast('Revisão salva!');
+}
+function updateRevBadge() {
+  const today=todayStr();
+  const pending=data.revisoes.filter(r=>r.status==='pending'&&r.data<=today).length;
+  const badge=document.getElementById('revBadge');
+  badge.style.display=pending?'inline':'none';
+  badge.textContent=pending;
+}
+function renderRevisoes() {
+  const el=document.getElementById('revisoesList');
+  const today=todayStr();
+  let list=[...data.revisoes].sort((a,b)=>a.data.localeCompare(b.data));
+  if(revisaoFilter==='pending') list=list.filter(r=>r.status==='pending');
+  if(revisaoFilter==='today') list=list.filter(r=>r.data===today&&r.status==='pending');
+  if(revisaoFilter==='done') list=list.filter(r=>r.status==='done');
+
+  // header with add button
+  const header=`<div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+    <button class="btn btn-primary btn-sm" onclick="openModalRevisao()">+ Adicionar Revisão</button>
+  </div>`;
+
+  if(!list.length) {
+    el.innerHTML=header+`<div class="empty-state"><div class="empty-icon">🔁</div><p>Nenhuma revisão ${revisaoFilter==='pending'?'pendente':'encontrada'}</p></div>`;
+    return;
+  }
+  el.innerHTML=header+list.map(r=>{
+    const t=data.topicos.find(x=>x.id===r.topicoId);
+    const m=data.materias.find(x=>x.id===t?.materiaId);
+    const isOverdue=r.status==='pending'&&r.data<today;
+    const isToday=r.data===today;
+    const diff=diffDays(today,r.data);
+    let badgeClass='badge-primary', diffText=`em ${diff}d`;
+    if(isOverdue){badgeClass='badge-danger';diffText=`atrasada ${Math.abs(diff)}d`;}
+    if(isToday){badgeClass='badge-warning';diffText='HOJE';}
+    if(r.status==='done'){badgeClass='badge-success';diffText='Concluída';}
+    return `
+    <div class="revision-item">
+      <div class="revision-dot" style="background:${m?.cor||'var(--primary)'}"></div>
+      <div class="revision-info">
+        <div class="revision-topic">${t?.nome||'—'}</div>
+        <div class="revision-sub">${m?.nome||'—'}</div>
+        <div class="revision-date">${fmtDate(r.data)}</div>
+      </div>
+      <span class="badge ${badgeClass}">${diffText}</span>
+      ${r.status==='pending'?`<button class="btn btn-success btn-xs" onclick="markRevisaoDone('${r.id}')">✓ Feita</button>`:''}
+      <button class="btn btn-ghost btn-xs" onclick="openModalRevisao('${r.id}')">✏️</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteRevisao('${r.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   SESSÕES
+══════════════════════════════════════ */
+function openSessionModal() {
+  document.getElementById('sData').value=todayStr();
+  document.getElementById('sHoras').value='';
+  document.getElementById('sNotes').value='';
+  openModal('modalSessao');
+}
+function saveSessao() {
+  const date=document.getElementById('sData').value;
+  const horas=parseFloat(document.getElementById('sHoras').value)||0;
+  const notas=document.getElementById('sNotes').value.trim();
+  if(!date||horas<=0) return toast('Informe data e horas','error');
+  let sess=data.sessoes.find(s=>s.data===date&&s.manual);
+  if(sess){sess.horas=(parseFloat(sess.horas)||0)+horas;sess.notas=notas;}
+  else data.sessoes.push({id:uid(),data:date,horas,notas,manual:true});
+  save(); closeModal('modalSessao'); renderDashboard(); toast('Sessão registrada!');
+}
+function renderHistorico() {
+  const el=document.getElementById('historicoList');
+  const byDay={};
+  data.sessoes.forEach(s=>{
+    if(!byDay[s.data]) byDay[s.data]=0;
+    byDay[s.data]+=parseFloat(s.horas)||0;
+  });
+  data.aulas.forEach(a=>{
+    if(!byDay[a.data]) byDay[a.data]=0;
+    // aulas already counted via sessions
+  });
+  const days=Object.keys(byDay).sort((a,b)=>b.localeCompare(a));
+  if(!days.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">📅</div><p>Nenhuma sessão registrada</p></div>`;return;}
+  el.innerHTML=days.map(d=>{
+    const aulas=data.aulas.filter(a=>a.data===d);
+    return `
+    <div class="question-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;align-items:center;width:100%;gap:12px">
+        <div style="font-weight:700">${fmtDate(d)}</div>
+        <div style="font-size:.8rem;color:var(--text2)">⏱ ${byDay[d].toFixed(1)}h</div>
+        <div style="font-size:.8rem;color:var(--text3)">${aulas.length} aula(s)</div>
+      </div>
+      ${aulas.map(a=>{const m=data.materias.find(x=>x.id===a.materiaId);const t=data.topicos.find(x=>x.id===a.topicoId);
+        return `<div style="font-size:.8rem;color:var(--text2);padding-left:12px;border-left:2px solid var(--border)">
+          <span style="color:${m?.cor}">${m?.nome||'—'}</span>${t?` · ${t.nome}`:''} 
+          <span class="badge ${a.status==='done'?'badge-success':'badge-warning'}" style="margin-left:6px">${a.status==='done'?'✓':'⏸'}</span>
+        </div>`;}).join('')}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   DESEMPENHO
+══════════════════════════════════════ */
+let desempenhoTab='geral';
+function filterDesempenho(f, el) {
+  desempenhoTab=f;
+  document.querySelectorAll('#page-desempenho .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderDesempenho(f);
+}
+function renderDesempenho(tab) {
+  const el=document.getElementById('desempenhoContent');
+  if(tab==='geral') {
+    const totalQ  = data.questoes.reduce((s,q)=>s+(q.total||0),0);
+    const totalAc = data.questoes.reduce((s,q)=>s+(q.acertos||0),0);
+    const pct=totalQ?Math.round(totalAc/totalQ*100):0;
+    const horas=data.aulas.reduce((s,a)=>s+(parseFloat(a.horas)||0),0);
+    const dias=new Set(data.aulas.map(a=>a.data)).size;
+    const revisoesDone=data.revisoes.filter(r=>r.status==='done').length;
+    el.innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-label">Aproveitamento Geral</div><div class="stat-value" style="color:var(--primary)">${pct}%</div><div class="stat-desc">${totalAc} acertos / ${totalQ} questões</div></div>
+      <div class="stat-card"><div class="stat-icon">⏱</div><div class="stat-label">Horas Totais</div><div class="stat-value">${horas.toFixed(1)}h</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Dias Estudados</div><div class="stat-value">${dias}</div></div>
+      <div class="stat-card"><div class="stat-icon">🔁</div><div class="stat-label">Revisões Feitas</div><div class="stat-value">${revisoesDone}</div></div>
+    </div>
+    <div class="card"><div class="card-title">Desempenho por Matéria</div><div style="margin-top:14px">${
+      data.materias.map(m=>{
+        const qs=data.questoes.filter(q=>q.materiaId===m.id);
+        const totM=qs.reduce((s,q)=>s+(q.total||0),0);
+        const acM =qs.reduce((s,q)=>s+(q.acertos||0),0);
+        const p=totM?Math.round(acM/totM*100):null;
+        const h=data.aulas.filter(a=>a.materiaId===m.id).reduce((s,a)=>s+(parseFloat(a.horas)||0),0);
+        const barPct = p !== null ? p : Math.min(100, Math.round(h/10*100));
+        const barWidth = Math.max(barPct, h>0 ? 4 : 0);
+        const label = p !== null ? `${acM}/${totM} (${p}%)` : `${h.toFixed(1)}h estudadas`;
+        return `<div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="width:10px;height:10px;border-radius:50%;background:${m.cor}"></div>
+            <span style="font-weight:600;flex:1">${m.nome}</span>
+            <span style="font-size:.78rem;color:var(--text2)">⏱ ${h.toFixed(1)}h</span>
+            <span style="font-size:.78rem;color:var(--text2)">${label}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill ${barPct>=70?'success':''}" style="width:${barWidth}%;${p===null?'background:'+m.cor:''}"></div></div>
+        </div>`;
+      }).join('')||'<div style="color:var(--text3);font-size:.85rem">Sem dados</div>'
+    }</div></div>`;
+  } else if(tab==='materia') {
+    el.innerHTML=data.materias.map(m=>{
+      const qs=data.questoes.filter(q=>q.materiaId===m.id);
+      const totM=qs.reduce((s,q)=>s+(q.total||0),0);
+      const acM =qs.reduce((s,q)=>s+(q.acertos||0),0);
+      const p=totM?Math.round(acM/totM*100):null;
+      const h=data.aulas.filter(a=>a.materiaId===m.id).reduce((s,a)=>s+(parseFloat(a.horas)||0),0);
+      const tops=data.topicos.filter(t=>t.materiaId===m.id);
+      const doneT=tops.filter(t=>t.status==='done').length;
+      const barPct = p !== null ? p : Math.min(100, Math.round(h/10*100));
+      const barWidth = Math.max(barPct, h>0 ? 4 : 0);
+      const aprovLabel = p !== null ? `${p}%` : `—`;
+      const aprovDesc = p !== null ? `${acM}/${totM} questões` : `${h.toFixed(1)}h estudadas`;
+      return `<div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:14px;height:14px;border-radius:50%;background:${m.cor}"></div>
+          <div style="font-weight:700;font-size:1rem;flex:1">${m.nome}</div>
+        </div>
+        <div class="progress-bar" style="margin-bottom:14px"><div class="progress-fill ${barPct>=70?'success':''}" style="width:${barWidth}%;${p===null?'background:'+m.cor:''}"></div></div>
+        <div class="grid-3">
+          <div class="stat-card"><div class="stat-label">Aproveitamento</div><div class="stat-value" style="font-size:1.4rem;color:var(--primary)">${aprovLabel}</div><div class="stat-desc">${aprovDesc}</div></div>
+          <div class="stat-card"><div class="stat-label">Horas</div><div class="stat-value" style="font-size:1.4rem">${h.toFixed(1)}h</div></div>
+          <div class="stat-card"><div class="stat-label">Tópicos</div><div class="stat-value" style="font-size:1.4rem">${doneT}/${tops.length}</div><div class="stat-desc">concluídos</div></div>
+        </div>
+      </div>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">📚</div><p>Nenhuma matéria cadastrada</p></div>`;
+  } else {
+    el.innerHTML=data.materias.map(m=>{
+      const tops=data.topicos.filter(t=>t.materiaId===m.id);
+      if(!tops.length) return '';
+      return `<div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${m.cor}"></div>
+          <div style="font-weight:700">${m.nome}</div>
+        </div>
+        ${tops.map(t=>{
+          const qs=data.questoes.filter(q=>q.topicoId===t.id);
+          const totT=qs.reduce((s,q)=>s+(q.total||0),0);
+          const acT =qs.reduce((s,q)=>s+(q.acertos||0),0);
+          const p=totT?Math.round(acT/totT*100):0;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span class="badge ${t.status==='done'?'badge-success':t.status==='partial'?'badge-warning':'badge-gray'}">${t.status==='done'?'✓':t.status==='partial'?'⏸':'—'}</span>
+            <span style="flex:1;font-size:.85rem">${t.nome}</span>
+            <span style="font-size:.78rem;color:var(--text2)">${totT?`${acT}/${totT} (${p}%)`:'—'}</span>
+            <div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${p}%"></div></div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">📊</div><p>Sem dados de tópicos</p></div>`;
+  }
+}
+
+/* ══════════════════════════════════════
+   CICLO DE ESTUDOS
+══════════════════════════════════════ */
+function getCiclo() {
+  if(!data.ciclo) data.ciclo = { estudadas: {} }; // { [materiaId]: true }
+  return data.ciclo;
+}
+
+function toggleCicloMateria(materiaId) {
+  const ciclo = getCiclo();
+  const jaEstudada = !!ciclo.estudadas[materiaId];
+  ciclo.estudadas[materiaId] = !jaEstudada;
+  // Se todas estiverem marcadas, reinicia automaticamente
+  const totalMaterias = data.materias.length;
+  const marcadas = Object.values(ciclo.estudadas).filter(Boolean).length;
+  if(marcadas >= totalMaterias && totalMaterias > 0) {
+    setTimeout(() => {
+      toast('🎉 Ciclo completo! Iniciando novo ciclo...');
+      ciclo.estudadas = {};
+      save();
+      renderCiclo();
+    }, 600);
+    save();
+    renderCiclo();
+    return;
+  }
+  save();
+  renderCiclo();
+}
+
+function resetCiclo() {
+  if(!confirm('Reiniciar o ciclo de estudos? O progresso atual será perdido.')) return;
+  getCiclo().estudadas = {};
+  save();
+  renderCiclo();
+  toast('Ciclo reiniciado!');
+}
+
+function renderCiclo() {
+  const el = document.getElementById('subjectProgress');
+  if(!el) return;
+  if(!data.materias.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:.85rem;padding:8px 0">Nenhuma matéria cadastrada</div>`;
+    return;
+  }
+  const ciclo = getCiclo();
+  const total = data.materias.length;
+  const marcadas = data.materias.filter(m => ciclo.estudadas[m.id]).length;
+  const cicloPct = total ? Math.round(marcadas/total*100) : 0;
+
+  // Barra geral do ciclo
+  let html = `
+    <div style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:.82rem;font-weight:600;color:var(--text2)">Progresso do ciclo atual</span>
+        <span style="font-size:.82rem;font-weight:700;color:var(--primary)">${marcadas}/${total} matérias</span>
+      </div>
+      <div class="progress-bar" style="height:10px">
+        <div class="progress-fill ${cicloPct>=100?'success':''}" style="width:${Math.max(cicloPct,marcadas>0?3:0)}%"></div>
+      </div>
+    </div>
+  `;
+
+  // Card de cada matéria
+  data.materias.forEach(m => {
+    const estudada = !!ciclo.estudadas[m.id];
+
+    // Última aula registrada para esta matéria
+    const aulasM = data.aulas.filter(a=>a.materiaId===m.id).sort((a,b)=>b.data.localeCompare(a.data));
+    const ultimaAula = aulasM[0];
+
+    // Onde continuar: ondePare da última aula, ou tópico mais recente não concluído
+    let ondeContinuar = '';
+    let ondeContinuarTipo = '';
+    if(ultimaAula?.ondePare) {
+      ondeContinuar = ultimaAula.ondePare;
+      ondeContinuarTipo = 'ondepare';
+    } else if(ultimaAula?.topicoId) {
+      const t = data.topicos.find(x=>x.id===ultimaAula.topicoId);
+      if(t) { ondeContinuar = t.nome; ondeContinuarTipo = 'topico'; }
+    } else {
+      // Próximo tópico não concluído
+      const proxTopico = data.topicos.find(t=>t.materiaId===m.id && t.status!=='done');
+      if(proxTopico) { ondeContinuar = proxTopico.nome; ondeContinuarTipo = 'proximo'; }
+    }
+
+    // Horas e última data de estudo
+    const h = aulasM.reduce((s,a)=>s+(parseFloat(a.horas)||0),0);
+    const ultimaData = ultimaAula ? fmtDate(ultimaAula.data) : null;
+
+    // Status de tópicos
+    const tops = data.topicos.filter(t=>t.materiaId===m.id);
+    const doneT = tops.filter(t=>t.status==='done').length;
+
+    html += `
+      <div style="
+        display:flex;flex-direction:column;gap:8px;
+        padding:13px 14px;margin-bottom:10px;border-radius:12px;
+        border:2px solid ${estudada ? m.cor : 'var(--border)'};
+        background:${estudada ? m.cor+'18' : 'var(--bg2)'};
+        transition:all .25s;
+      ">
+        <div style="display:flex;align-items:center;gap:10px">
+          <!-- Checkbox -->
+          <div onclick="toggleCicloMateria('${m.id}')" style="
+            width:24px;height:24px;border-radius:50%;border:2.5px solid ${m.cor};
+            background:${estudada ? m.cor : 'transparent'};
+            display:flex;align-items:center;justify-content:center;
+            cursor:pointer;flex-shrink:0;transition:all .2s;
+          ">${estudada ? '<span style="color:#fff;font-size:14px;line-height:1">✓</span>' : ''}</div>
+
+          <!-- Nome e badges -->
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.93rem;${estudada?'text-decoration:line-through;opacity:.6':''}">${m.nome}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">
+              ${h>0 ? `<span style="font-size:.72rem;color:var(--text3)">⏱ ${h.toFixed(1)}h estudadas</span>` : ''}
+              ${ultimaData ? `<span style="font-size:.72rem;color:var(--text3)">📅 Última: ${ultimaData}</span>` : ''}
+              ${tops.length ? `<span style="font-size:.72rem;color:var(--text3)">📌 ${doneT}/${tops.length} tópicos</span>` : ''}
+            </div>
+          </div>
+
+          <!-- Cor indicadora -->
+          <div style="width:10px;height:10px;border-radius:50%;background:${m.cor};flex-shrink:0"></div>
+        </div>
+
+        <!-- Onde continuar -->
+        ${!estudada && ondeContinuar ? `
+          <div style="
+            display:flex;align-items:center;gap:7px;
+            padding:7px 10px;border-radius:8px;
+            background:${m.cor}22;border-left:3px solid ${m.cor};
+            font-size:.78rem;
+          ">
+            <span style="font-size:1rem">${ondeContinuarTipo==='ondepare'?'📍':ondeContinuarTipo==='proximo'?'▶️':'📖'}</span>
+            <div>
+              <span style="color:var(--text3);font-weight:600">${ondeContinuarTipo==='proximo'?'Próximo tópico':'Continue em'}:</span>
+              <span style="color:var(--text1);font-weight:700;margin-left:4px">${ondeContinuar}</span>
+            </div>
+          </div>
+        ` : ''}
+        ${!estudada && !ondeContinuar && !ultimaAula ? `
+          <div style="font-size:.75rem;color:var(--text3);padding:4px 0 0 34px">⚡ Nenhum estudo registrado ainda</div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  el.innerHTML = html;
+}
+
+/* ══════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════ */
+function renderDashboard() {
+  const totalHoras=data.aulas.reduce((s,a)=>s+(parseFloat(a.horas)||0),0);
+  const diasEstudo=new Set(data.aulas.map(a=>a.data)).size;
+  const totalQs=data.questoes.length;
+  const correct=data.questoes.filter(q=>q.resultado==='correct').length;
+  const pct=totalQs?Math.round(correct/totalQs*100):0;
+  const today=todayStr();
+  const pendRev=data.revisoes.filter(r=>r.status==='pending'&&r.data<=today).length;
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">⏱</div><div class="stat-label">Horas Estudadas</div><div class="stat-value">${totalHoras.toFixed(1)}h</div><div class="stat-desc">total acumulado</div></div>
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Dias Estudados</div><div class="stat-value">${diasEstudo}</div><div class="stat-desc">desde o início</div></div>
+    <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-label">Aproveitamento</div><div class="stat-value" style="color:var(--primary)">${pct}%</div><div class="stat-desc">${correct}/${totalQs} questões</div></div>
+    <div class="stat-card"><div class="stat-icon">🔁</div><div class="stat-label">Revisões Pendentes</div><div class="stat-value" style="color:${pendRev?'var(--danger)':'var(--success)'}">${pendRev}</div><div class="stat-desc">para hoje ou atrasadas</div></div>
+  `;
+  // Heatmap
+  const heatmapEl=document.getElementById('heatmap');
+  const studyDays=new Set(data.aulas.map(a=>a.data));
+  heatmapEl.innerHTML='';
+  for(let i=83;i>=0;i--) {
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.toISOString().split('T')[0];
+    const cell=document.createElement('div');
+    cell.className='day-cell'+(studyDays.has(ds)?' studied':'');
+    cell.title=fmtDate(ds)+(studyDays.has(ds)?' — Estudou':'');
+    heatmapEl.appendChild(cell);
+  }
+  // Dashboard revisions
+  const revEl=document.getElementById('dashRevisions');
+  const upcoming=[...data.revisoes].filter(r=>r.status==='pending').sort((a,b)=>a.data.localeCompare(b.data)).slice(0,5);
+  if(!upcoming.length){revEl.innerHTML=`<div style="color:var(--text3);font-size:.85rem;padding:10px 0">Nenhuma revisão pendente 🎉</div>`;}
+  else revEl.innerHTML=upcoming.map(r=>{
+    const t=data.topicos.find(x=>x.id===r.topicoId);
+    const m=data.materias.find(x=>x.id===t?.materiaId);
+    const isOver=r.data<today,isToday=r.data===today;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${m?.cor||'var(--primary)'}"></div>
+      <div style="flex:1;font-size:.83rem;font-weight:500">${t?.nome||'—'}</div>
+      <span class="badge ${isOver?'badge-danger':isToday?'badge-warning':'badge-primary'}">${isOver?'Atraso':isToday?'Hoje':fmtDate(r.data)}</span>
+    </div>`;
+  }).join('');
+  // Ciclo de Estudos
+  renderCiclo();
+  updateRevBadge();
+}
+
+/* ══════════════════════════════════════
+   IMPORT / EXPORT / CLEAR
+══════════════════════════════════════ */
+function exportData() {
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`studytrack_backup_${todayStr()}.json`; a.click();
+  toast('Dados exportados!');
+}
+function importData(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try {
+      const imported=JSON.parse(e.target.result);
+      if(!imported.materias) throw new Error('Formato inválido');
+      Object.assign(data, imported);
+      save(); applyColor(data.settings.color||'#6C63FF');
+      document.getElementById('siteNameDisplay').textContent=data.settings.siteName||'StudyTrack';
+      renderDashboard(); toast('Dados importados com sucesso!');
+    } catch(err) { toast('Erro ao importar: '+err.message,'error'); }
+  };
+  reader.readAsText(file);
+}
+function clearAllData() {
+  if(!confirm('Tem certeza? Todos os dados serão apagados permanentemente!')) return;
+  localStorage.removeItem(DB_KEY);
+  location.reload();
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+function init() {
+  // Apply saved color
+  applyColor(data.settings.color||'#6C63FF');
+  // Apply saved name
+  const nm=data.settings.siteName||'StudyTrack';
+  document.getElementById('siteNameDisplay').textContent=nm;
+  document.title=nm;
+  // Date
+  document.getElementById('topDate').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  // Render
+  renderDashboard();
+  updateRevBadge();
+  // Palette in materia modal
+  renderPalette();
+}
+init();
+</script>
+</body>
+</html>
